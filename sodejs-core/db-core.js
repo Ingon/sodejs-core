@@ -38,13 +38,19 @@ function Connection(jcon) {
 	this.update = function(sql) {
 		return createStatement(sql, arguments).executeUpdate();
 	};
+	
+	this.close = function() {
+		jcon.close();
+	};
 }
 
-exports.pgLoad = function() {
-	Packages.java.lang.Class.forName('org.postgresql.Driver');
-}
-
+var pgDriverLoaded = false;
 exports.pgConnect = function(db, user, pass, host, port) {
+	if(! pgDriverLoaded) {
+		Packages.java.lang.Class.forName('org.postgresql.Driver');
+		pgDriverLoaded = true;
+	}
+	
 	user = user || db;
 	pass = pass || db;
 	host = host || 'localhost';
