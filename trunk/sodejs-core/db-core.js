@@ -1,5 +1,28 @@
-function Table(tables) {
+function ColumnMetadata(cols) {
+	this.name = cols.getString('COLUMN_NAME');
+	this.type = cols.getInt('DATA_TYPE');
+	this.tojs = function(o) {
+		return o;
+	};
+	
+	if(this.type == Packages.java.sql.Types.CHAR || this.type == Packages.java.sql.Types.VARCHAR) {
+		this.tojs = function(o) {
+			return "" + o;
+		};
+	}
+}
+
+function TableMetadata(meta, tables) {
 	this.name = tables.getString('TABLE_NAME');
+	this.columns = {};
+	this.columns_ordered = [];
+	
+	var cols = meta.getColumns(null, null, this.name, null);
+	while(cols.next()) {
+		var c = new ColumnMetadata(cols);
+		this.columns[c.name] = c;
+		this.columns_ordered.push(c);
+	}
 }
 
 function Connection(jcon) {
@@ -9,40 +32,40 @@ function Connection(jcon) {
 	var dbmeta = jcon.getMetaData();
 	var tables = dbmeta.getTables(null, 'public', null, ['TABLE']);
 	while(tables.next()) {
-		var t = new Table(tables)
+		var t = new TableMetadata(dbmeta, tables)
 		this.tables[t.name] = t;
 	}
-
-	function createStatement(sql, arguments) {
-		var arr = arguments;
-		if(arguments.length == 2 && (arguments[1] instanceof Array)) {
-			arr = arguments[1];
-			var stat = jcon.prepareStatement(sql);
-			for(var i = 0; i < arr.length;i++) {
-				stat.setObject(i + 1, arr[i]);
-			}
-			return stat;
-		} else {
-			var stat = jcon.prepareStatement(sql);
-			for(var i = 1; i < arr.length;i++) {
-				stat.setObject(i, arr[i]);
-			}
-			return stat;
-		}
-	};
-	
-	this.query = function(sql) {
-		return createStatement(sql, arguments).executeQuery();
-	};
-	
-	this.update = function(sql) {
-		return createStatement(sql, arguments).executeUpdate();
-	};
-	
-	this.close = function() {
-		jcon.close();
-	};
 }
+
+function createStatement(jcon, sql, arguments) {
+	var arr = arguments;
+	if(arguments.length == 2 && (arguments[1] instanceof Array)) {
+		arr = arguments[1];
+		var stat = jcon.prepareStatement(sql);
+		for(var i = 0; i < arr.length;i++) {
+			stat.setObject(i + 1, arr[i]);
+		}
+		return stat;
+	} else {
+		var stat = jcon.prepareStatement(sql);
+		for(var i = 1; i < arr.length;i++) {
+			stat.setObject(i, arr[i]);
+		}
+		return stat;
+	}
+};
+
+Connection.prototype.query = function(sql) {
+	return createStatement(this.jcon, sql, arguments).executeQuery();
+};
+
+Connection.prototype.update = function(sql) {
+	return createStatement(this.jcon, sql, arguments).executeUpdate();
+};
+
+Connection.prototype.close = function() {
+	this.jcon.close();
+};
 
 var pgDriverLoaded = false;
 exports.pgConnect = function(db, user, pass, host, port) {
