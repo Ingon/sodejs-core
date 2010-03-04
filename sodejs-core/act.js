@@ -5,7 +5,7 @@ exports.register = function(name, obj) {
 };
 
 exports.execute = function() {
-	var pinfo = require('req').pathInfo();
+	var pinfo = require('request').pathInfo();
 	var info = pinfo.split('/');
 	
 	var action = null;
