@@ -17,6 +17,16 @@ Dao.prototype.get = function(id) {
 	return this.loadObject(rs);
 };
 
+Dao.prototype.findSingle = function(name, value) {
+	// TODO should use functions based on data type - '=' for int, 'Like' for string
+	var ors = con.query('SELECT * FROM ' + this.table.name + ' WHERE ' + name + ' = ?', value);
+	if(! ors.next()) {
+		return null;
+	}
+	
+	return this.loadObject(ors);
+};
+
 Dao.prototype.loadAll = function(rs) {
 	var all = new Array();
 	while(rs.next()) {
@@ -34,6 +44,76 @@ Dao.prototype.loadObject = function(rs) {
 		cobj[colName] = this.table.columns[colName].tojs(rs.getObject(colName));
 	}
 	return cobj;
+};
+
+Dao.prototype.save = function(obj) {
+	if(obj.id) {
+		this.update(obj);
+	} else {
+		this.insert(obj);
+	}
+};
+
+Dao.prototype.insert = function(obj) {
+	var sql = 'INSERT INTO ' + this.table.name;
+	
+	sql += '(';
+	vals = ' VALUES (';
+	rvals = [];
+	for each (var col in this.table.columns) {
+		if(col.name == 'id') {
+			continue;
+		}
+		
+		sql += col.name;
+		sql += ', ';
+		
+		vals += '?, ';
+		rvals.push(obj[col.name]);
+	}
+	
+	sql = sql.slice(0, sql.length - 2);
+	sql += ')';
+	
+	vals = vals.slice(0, vals.length - 2);
+	vals += ')';
+	
+	sql += vals;
+	
+	con.update(sql, rvals);
+	
+	var ors = con.query("SELECT CURRVAL ('" + this.table.name + "_id_seq')");
+	ors.next();
+	return ors.getInt(1);
+};
+
+Dao.prototype.update = function(obj) {
+	var sql = 'UPDATE ' + this.table.name;
+	
+	sql += ' SET ';
+	rvals = [];
+	for each (var col in this.table.columns) {
+		if(col.name == 'id') {
+			continue;
+		}
+		
+		sql += col.name + ' = ?';
+		sql += ', ';
+		
+		rvals.push(obj[col.name]);
+	}
+	
+	sql = sql.slice(0, sql.length - 2);
+	
+	sql += ' WHERE id = ?';
+	rvals.push(obj['id']);
+		
+	con.update(sql, rvals);
+};
+
+Dao.prototype.remove = function(id) {
+	var sql = 'DELETE FROM ' + this.name + ' WHERE id = ?';
+	con.update(sql, id);
 };
 
 function DaoConnection(con) {
