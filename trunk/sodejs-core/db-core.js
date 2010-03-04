@@ -1,3 +1,5 @@
+var log = require('sys-log');
+
 function ColumnMetadata(cols) {
 	this.name = cols.getString('COLUMN_NAME');
 	this.type = cols.getInt('DATA_TYPE');
@@ -56,10 +58,12 @@ function createStatement(jcon, sql, arguments) {
 };
 
 Connection.prototype.query = function(sql) {
+	log.info('Query SQL: ' + sql);
 	return createStatement(this.jcon, sql, arguments).executeQuery();
 };
 
 Connection.prototype.update = function(sql) {
+	log.info('Update SQL: ' + sql);
 	return createStatement(this.jcon, sql, arguments).executeUpdate();
 };
 
