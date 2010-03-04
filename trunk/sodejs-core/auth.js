@@ -1,4 +1,5 @@
 var log = require('sys-log');
+var ses = require('session');
 
 exports.login = function(users_table, name, pass) {
 	var user = users_table.findSingle('name', name);
