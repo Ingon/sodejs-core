@@ -32,5 +32,5 @@ exports.execute = function() {
 		throw 'Unable to find action for: ' + pinfo;
 	}
 	
-	action();
+	return action();
 };
