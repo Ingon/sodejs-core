@@ -11,6 +11,13 @@ function ColumnMetadata(cols) {
 		this.tojs = function(o) {
 			return "" + o;
 		};
+	} else if(this.type == Packages.java.sql.Types.TIMESTAMP) {
+		this.tojs = function(o) {
+			if(o == null) {
+				return null;
+			}
+			return new Date(o.getTime());
+		};
 	}
 }
 
