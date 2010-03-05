@@ -32,7 +32,11 @@ exports.isLogged = function() {
 exports.getLogged = function() {
 	return ses.get('login.user');
 };
-	
+
+exports.getLoggedId = function() {
+	return exports.getLogged().id;
+};
+
 exports.encrypt = function(text) {
 	var md = Packages.java.security.MessageDigest.getInstance("SHA");
 	md.update(text.getBytes("UTF-8"));
