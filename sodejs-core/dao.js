@@ -69,7 +69,7 @@ Dao.prototype.insert = function(obj) {
 		sql += ', ';
 		
 		vals += '?, ';
-		rvals.push(obj[col.name]);
+		rvals.push(col.toj(obj[col.name]));
 	}
 	
 	sql = sql.slice(0, sql.length - 2);
@@ -100,14 +100,14 @@ Dao.prototype.update = function(obj) {
 		sql += col.name + ' = ?';
 		sql += ', ';
 		
-		rvals.push(obj[col.name]);
+		rvals.push(col.toj(obj[col.name]));
 	}
 	
 	sql = sql.slice(0, sql.length - 2);
 	
 	sql += ' WHERE id = ?';
 	rvals.push(obj['id']);
-		
+
 	con.update(sql, rvals);
 };
 
