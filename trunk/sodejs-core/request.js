@@ -17,3 +17,12 @@ exports.geti = function(name) {
 exports.getAll = function(name) {
 	return _req.getParameterValues(name);
 };
+
+exports.geto = function() {
+	var result = {};
+    for(var e = _req.getParameterNames(); e.hasMoreElements(); ) {
+        var pname = e.nextElement();
+        result[pname] = "" + this.get(pname);
+    }
+    return result;
+}

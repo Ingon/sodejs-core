@@ -6,18 +6,39 @@ function ColumnMetadata(cols) {
 	this.tojs = function(o) {
 		return o;
 	};
+	this.toj = function(o) {
+		return o;
+	};
 	
 	if(this.type == Packages.java.sql.Types.CHAR || this.type == Packages.java.sql.Types.VARCHAR) {
 		this.tojs = function(o) {
-			return "" + o;
+			if(o != null) {
+				return "" + o;
+			}
+			return null;
 		};
 	} else if(this.type == Packages.java.sql.Types.TIMESTAMP || this.type == Packages.java.sql.Types.DATE) {
 		this.tojs = function(o) {
-			if(o == null) {
-				return null;
+			if(o != null) {
+				return new Date(o.getTime());
 			}
-			return new Date(o.getTime());
+			return null;
 		};
+		
+		if(this.type == Packages.java.sql.Types.TIMESTAMP) {
+			this.toj = function(o) {
+				if(o) {
+					return new Packages.java.sql.Timestamp(o.getTime());
+				}
+			};
+		} else if(this.type == Packages.java.sql.Types.DATE) {
+			this.toj = function(o) {
+				if(o) {
+					return new Packages.java.sql.Date(o.getTime());
+				}
+				return null;
+			};
+		}
 	}
 }
 
