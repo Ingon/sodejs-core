@@ -27,6 +27,38 @@ Dao.prototype.findSingle = function(name, value) {
 	return this.loadObject(ors);
 };
 
+Dao.prototype._buildWhere = function(example) {
+	var sql = ' WHERE ';
+	var values = [];
+	
+	var first = true;
+	for(var e in example) {
+		if(first == false) {
+			sql += ' AND ';
+		}
+		first = false;
+		var val = example[e];
+		if(val) {
+			sql += e + ' = ?';
+			var jval = this.table.columns[e].toj(val);
+			values.push(jval);
+		} else {
+			sql += e + ' IS NULL';
+		}
+	}
+	return {sql : sql, values : values};
+};
+
+Dao.prototype.find = function(example) {
+	var where = this._buildWhere(example);
+	
+	var sql = 'SELECT * FROM ' + this.table.name;
+	sql += where.sql;
+	
+	var rs = this.con.query(sql, where.values);
+	return this.loadAll(rs);
+};
+
 Dao.prototype.loadAll = function(rs) {
 	var all = new Array();
 	while(rs.next()) {
@@ -82,9 +114,13 @@ Dao.prototype.insert = function(obj) {
 	
 	con.update(sql, rvals);
 	
-	var ors = con.query("SELECT CURRVAL ('" + this.table.name + "_id_seq')");
-	ors.next();
-	return ors.getInt(1);
+	if(this.table.columns.id) {
+		var ors = con.query("SELECT CURRVAL ('" + this.table.name + "_id_seq')");
+		ors.next();
+		return ors.getInt(1);
+	} else {
+		return null;
+	}
 };
 
 Dao.prototype.update = function(obj) {
@@ -112,7 +148,7 @@ Dao.prototype.update = function(obj) {
 };
 
 Dao.prototype.remove = function(id) {
-	var sql = 'DELETE FROM ' + this.name + ' WHERE id = ?';
+	var sql = 'DELETE FROM ' + this.table.name + ' WHERE id = ?';
 	con.update(sql, id);
 };
 
